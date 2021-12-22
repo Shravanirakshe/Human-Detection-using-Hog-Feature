@@ -1,17 +1,16 @@
 """
 Steps :
-1. Read the Test image and convert it to grayscale using G = round(0.299R + 0.587G + 0.114B)
+1. Read the Test image and convert it to grayscale using G = round(0.299R + 0.587G + 0.114B).
 2. Calculate the Gradient Magnitude using Prewitt's operator. Normalize gradient values and then compute the Gradient angle.
 3. Compute the descriptor for test image which will be of dimension 7524 x 1.
 4. Perform training. Repeat steps 1 to 3 for all 20 training images.
 5. Calculate similarity by using Histogram Intersection. Find the 3 nearest neighbors.
-6. Classify the image as Human or No-human
+6. Classify the image as Human or No-human.
 """
 import numpy as np
 import argparse
 import cv2
 import os
-
 
 def convolution(image, mask):
     image_row, image_col = image.shape
@@ -68,10 +67,11 @@ def gradient_operation(image, edge_filter):
 
 
 def histogram_calculate(pixel_mag, pixel_angle, orientation_bin_midpoints, cell_list):
+    # Calculating histogram split for every pixel depending on the distance from the bin centres
 
-    # If the gradient angle for a pixel is between 10 and 170 then calculate bin centres and corresponding indexes
-    # for the histogram
     if 10 <= pixel_angle < 170:
+        # If the gradient angle for a pixel is between 10 and 170 then calculate bin centres and corresponding indexes
+        # for the histogram
         for i in range(len(orientation_bin_midpoints)):
             if pixel_angle < orientation_bin_midpoints[i]:
                 bin1 = orientation_bin_midpoints[i - 1]
@@ -105,6 +105,7 @@ def histogram_cell(gradient_magnitude, gradient_direction, orientation_bin_midpo
     cell_list = np.zeros(9, dtype=float)
     for i in range(gradient_magnitude.shape[0]):
         for j in range(gradient_magnitude.shape[1]):
+            # Pass the gradient magnitude and angle at every pixel location of a cell to histogram_calculate
             histogram_calculate(gradient_magnitude[i][j], gradient_direction[i][j], orientation_bin_midpoints,
                                 cell_list)
     # Concatenating the histogram cells into one array of dimension 1 x 36.
@@ -161,8 +162,10 @@ def knn(neighbour_info, training_set):
         if training_set.get(k) == "Human":
             majority += 1
         print(k, "\t", v, "\t", training_set.get(k))
+    # For majority being Human
     if majority > 1:
         print("Human Detected!")
+    # For majority being No-human
     else:
         print("Human Not Detected!")
 
@@ -186,7 +189,7 @@ if __name__ == '__main__':
     # Computing gradient magnitude and gradient angle for test image
     horizontal_gradient, vertical_gradient, gradient_magnitude, gradient_direction = gradient_operation(test_image,
                                                                                                         edge_filter)
-    # Creating path to write output images of Canny Edge Detector
+    # Creating path to write output images of Gradient Magnitude
     folder, fname_with_extension = os.path.split(args['image'])
     fname, extension = os.path.splitext(fname_with_extension)
     path = str(fname) + "_output"
